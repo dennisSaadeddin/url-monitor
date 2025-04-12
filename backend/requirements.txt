@@ -1,0 +1,12 @@
+flask==2.3.3
+flask-cors==4.0.0
+requests==2.31.0
+sqlalchemy==2.0.23
+apscheduler==3.10.4
+python-dotenv==1.0.0
+pyshark==0.6.0  # For packet analysis if tshark is available
+scapy==2.5.0    # Alternative for packet analysis
+beautifulsoup4==4.12.2  # For HTML parsing in fallback method
+flask-swagger-ui==4.11.1  # For Swagger documentation
+apispec==6.3.0  # For OpenAPI spec generation
+marshmallow==3.20.1  # For schema serialization
