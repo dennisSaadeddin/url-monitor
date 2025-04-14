@@ -82,21 +82,36 @@ const UrlDetail = ({ url }) => {
 
   // Set up initial data fetch and refresh interval
   useEffect(() => {
+    // Fetch data immediately
     fetchStatusData();
     
+    let intervalId = null;
+    
     // Set up refresh interval if URL is active
-    if (url.is_active) {
-      const intervalId = setInterval(fetchStatusData, Math.max(url.check_frequency * 1000, 10000));
+    if (url && url.is_active) {
+      // Ensure minimum refresh rate of 10 seconds to avoid overwhelming the server
+      const refreshRate = Math.max(url.check_frequency * 1000, 10000);
+      intervalId = setInterval(fetchStatusData, refreshRate);
       setRefreshInterval(intervalId);
     }
     
     // Clean up interval on component unmount or URL change
     return () => {
-      if (refreshInterval) {
-        clearInterval(refreshInterval);
+      if (intervalId) {
+        clearInterval(intervalId);
       }
     };
-  }, [url.id, url.is_active, url.check_frequency, fetchStatusData, refreshInterval]);
+  }, [url?.id, url?.is_active, url?.check_frequency, fetchStatusData]);
+  
+  // Separate effect for refreshInterval cleanup
+  useEffect(() => {
+    return () => {
+      if (refreshInterval) {
+        clearInterval(refreshInterval);
+        setRefreshInterval(null);
+      }
+    };
+  }, [refreshInterval]);
   
   // Update displayed statuses when page size or current page changes
   useEffect(() => {

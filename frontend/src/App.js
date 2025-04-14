@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import axios from 'axios';
 import UrlForm from './components/UrlForm';
 import UrlList from './components/UrlList';
@@ -16,15 +16,19 @@ function App() {
   const [urlListTab, setUrlListTab] = useState('monitored'); // 'monitored' or 'one-time'
   const [oneTimeCheckResult, setOneTimeCheckResult] = useState(null); // One-time check results
   const [oneTimeActiveTab, setOneTimeActiveTab] = useState('status'); // Tab for one-time check results
+  const [fetchingInProgress, setFetchingInProgress] = useState(false); // Prevent duplicate fetches
+  const [lastFetchTime, setLastFetchTime] = useState(0); // Timestamp of last fetch
 
-  // Fetch all URLs on component mount
-  useEffect(() => {
-    fetchUrls();
-  }, []);
-
-  // Function to fetch all URLs
-  const fetchUrls = async () => {
+  // Function to fetch all URLs with debouncing
+  const fetchUrls = useCallback(async () => {
+    // Prevent multiple concurrent fetches and limit frequency
+    const now = Date.now();
+    if (fetchingInProgress || (now - lastFetchTime < 2000)) {
+      return; // Skip if a fetch is already in progress or if we fetched recently
+    }
+    
     try {
+      setFetchingInProgress(true);
       setLoading(true);
       
       // Fetch both monitored and one-time URLs
@@ -36,13 +40,20 @@ function App() {
       setUrls(regularResponse.data);
       setOneTimeUrls(oneTimeResponse.data);
       setError(null);
+      setLastFetchTime(Date.now());
     } catch (err) {
       setError('Failed to fetch URLs. Please try again later.');
       console.error('Error fetching URLs:', err);
     } finally {
       setLoading(false);
+      setFetchingInProgress(false);
     }
-  };
+  }, [fetchingInProgress, lastFetchTime]);
+
+  // Fetch all URLs on component mount
+  useEffect(() => {
+    fetchUrls();
+  }, [fetchUrls]);
 
   // Function to add a new URL or perform one-time check
   const addUrl = async (urlData) => {

@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import axios from 'axios';
 
 const SubsequentRequestsView = ({ url, oneTimeResult }) => {
@@ -17,8 +17,8 @@ const SubsequentRequestsView = ({ url, oneTimeResult }) => {
   });
   const [expandedUrl, setExpandedUrl] = useState(null);
 
-  // Fetch subsequent requests data
-  const fetchRequests = async () => {
+  // Fetch subsequent requests data - wrapped in useCallback
+  const fetchRequests = useCallback(async () => {
     // If we have a one-time result, use that instead of fetching
     if (oneTimeResult && oneTimeResult.subsequent_requests) {
       setRequests(oneTimeResult.subsequent_requests);
@@ -70,35 +70,28 @@ const SubsequentRequestsView = ({ url, oneTimeResult }) => {
         setLoading(false);
       }
     }
-  };
+  }, [url?.id, filters, oneTimeResult]); // Only depend on stable values
 
-  // Fetch filter options
-  const fetchFilterOptions = async () => {
+  // Fetch filter options - wrapped in useCallback
+  const fetchFilterOptions = useCallback(async () => {
     try {
       // Only fetch filter options for regular URLs, not one-time checks
-      if (!oneTimeResult) {
+      if (!oneTimeResult && url?.id) {
         const response = await axios.get('/api/subsequent-requests/filters');
         setFilterOptions(response.data);
       }
     } catch (err) {
       console.error('Error fetching filter options:', err);
     }
-  };
+  }, [oneTimeResult, url?.id]); // Only depend on stable values
 
-  // Initial data fetch
+  // Initial data fetch - with fixed dependencies
   useEffect(() => {
     if (oneTimeResult || (url && url.id)) {
       fetchRequests();
       fetchFilterOptions();
     }
-  }, [url, oneTimeResult, fetchRequests, fetchFilterOptions]); // Added missing dependencies
-
-  // Re-fetch when filters change
-  useEffect(() => {
-    if (url && url.id) {
-      fetchRequests();
-    }
-  }, [filters, fetchRequests, url]); // Added missing dependencies
+  }, [fetchRequests, fetchFilterOptions]);
 
   // Handle filter change
   const handleFilterChange = (e) => {

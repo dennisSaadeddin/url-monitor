@@ -190,36 +190,39 @@ def update_url(url_id):
     data = request.json
     db = SessionLocal()
     
-    url = db.query(URL).filter(URL.id == url_id).first()
-    if not url:
-        return jsonify({'error': 'URL not found'}), 404
-    
-    # Update URL fields
-    if 'name' in data:
-        url.name = data['name']
-    if 'check_frequency' in data:
-        url.check_frequency = data['check_frequency']
-    if 'is_active' in data:
-        url.is_active = data['is_active']
-    
-    db.commit()
-    db.refresh(url)
-    
-    # Update monitoring
-    if url.is_active:
-        monitor.update_frequency(url)
-    else:
-        monitor.stop_monitoring(url.id)
-    
-    return jsonify({
-        'id': url.id,
-        'url': url.url,
-        'name': url.name,
-        'is_active': url.is_active,
-        'check_frequency': url.check_frequency,
-        'created_at': url.created_at,
-        'updated_at': url.updated_at
-    })
+    try:
+        url = db.query(URL).filter(URL.id == url_id).first()
+        if not url:
+            return jsonify({'error': 'URL not found'}), 404
+        
+        # Update URL fields
+        if 'name' in data:
+            url.name = data['name']
+        if 'check_frequency' in data:
+            url.check_frequency = data['check_frequency']
+        if 'is_active' in data:
+            url.is_active = data['is_active']
+        
+        db.commit()
+        db.refresh(url)
+        
+        # Update monitoring
+        if url.is_active:
+            monitor.update_frequency(url)
+        else:
+            monitor.stop_monitoring(url.id)
+        
+        return jsonify({
+            'id': url.id,
+            'url': url.url,
+            'name': url.name,
+            'is_active': url.is_active,
+            'check_frequency': url.check_frequency,
+            'created_at': url.created_at,
+            'updated_at': url.updated_at
+        })
+    finally:
+        db.close()
 
 @app.route('/api/urls/<int:url_id>', methods=['DELETE'])
 def delete_url(url_id):
@@ -270,79 +273,88 @@ def get_url_status(url_id):
     """Get the status history of a URL."""
     db = SessionLocal()
     
-    # Check if URL exists
-    url = db.query(URL).filter(URL.id == url_id).first()
-    if not url:
-        return jsonify({'error': 'URL not found'}), 404
-    
-    # Get latest status
-    statuses = db.query(URLStatus).filter(
-        URLStatus.url_id == url_id
-    ).order_by(URLStatus.timestamp.desc()).limit(100).all()
-    
-    return jsonify([{
-        'id': status.id,
-        'status_code': status.status_code,
-        'response_time': status.response_time,
-        'is_up': status.is_up,
-        'timestamp': status.timestamp,
-        'error_message': status.error_message
-    } for status in statuses])
+    try:
+        # Check if URL exists
+        url = db.query(URL).filter(URL.id == url_id).first()
+        if not url:
+            return jsonify({'error': 'URL not found'}), 404
+        
+        # Get latest status
+        statuses = db.query(URLStatus).filter(
+            URLStatus.url_id == url_id
+        ).order_by(URLStatus.timestamp.desc()).limit(100).all()
+        
+        return jsonify([{
+            'id': status.id,
+            'status_code': status.status_code,
+            'response_time': status.response_time,
+            'is_up': status.is_up,
+            'timestamp': status.timestamp,
+            'error_message': status.error_message
+        } for status in statuses])
+    finally:
+        db.close()
 
 @app.route('/api/urls/<int:url_id>/subsequent-requests', methods=['GET'])
 def get_subsequent_requests(url_id):
     """Get the subsequent requests made after accessing a URL."""
     db = SessionLocal()
     
-    # Check if URL exists
-    url = db.query(URL).filter(URL.id == url_id).first()
-    if not url:
-        return jsonify({'error': 'URL not found'}), 404
-    
-    # Get query parameters for filtering
-    resource_type = request.args.get('resource_type')
-    state_type = request.args.get('state_type')
-    protocol = request.args.get('protocol')
-    
-    # Build the query
-    query = db.query(SubsequentRequest).filter(SubsequentRequest.url_id == url_id)
-    
-    # Apply filters if provided
-    if resource_type:
-        query = query.filter(SubsequentRequest.resource_type == resource_type)
-    if state_type:
-        query = query.filter(SubsequentRequest.state_type == state_type)
-    if protocol:
-        query = query.filter(SubsequentRequest.protocol == protocol)
-    
-    # Execute the query
-    requests = query.order_by(SubsequentRequest.timestamp.desc()).all()
-    
-    return jsonify([{
-        'id': req.id,
-        'target_url': req.target_url,
-        'ip_address': req.ip_address,
-        'resource_type': req.resource_type,
-        'state_type': req.state_type,
-        'protocol': req.protocol,
-        'timestamp': req.timestamp
-    } for req in requests])
+    try:
+        # Check if URL exists
+        url = db.query(URL).filter(URL.id == url_id).first()
+        if not url:
+            return jsonify({'error': 'URL not found'}), 404
+        
+        # Get query parameters for filtering
+        resource_type = request.args.get('resource_type')
+        state_type = request.args.get('state_type')
+        protocol = request.args.get('protocol')
+        
+        # Build the query
+        query = db.query(SubsequentRequest).filter(SubsequentRequest.url_id == url_id)
+        
+        # Apply filters if provided
+        if resource_type:
+            query = query.filter(SubsequentRequest.resource_type == resource_type)
+        if state_type:
+            query = query.filter(SubsequentRequest.state_type == state_type)
+        if protocol:
+            query = query.filter(SubsequentRequest.protocol == protocol)
+        
+        # Execute the query
+        requests = query.order_by(SubsequentRequest.timestamp.desc()).all()
+        
+        return jsonify([{
+            'id': req.id,
+            'target_url': req.target_url,
+            'ip_address': req.ip_address,
+            'resource_type': req.resource_type,
+            'state_type': req.state_type,
+            'protocol': req.protocol,
+            'timestamp': req.timestamp
+        } for req in requests])
+    finally:
+        db.close()
 
 @app.route('/api/subsequent-requests/filters', methods=['GET'])
 def get_filter_options():
     """Get available filter options for subsequent requests."""
     db = SessionLocal()
     
-    # Get distinct values for each filter category
-    resource_types = [r[0] for r in db.query(SubsequentRequest.resource_type).distinct().all() if r[0] != 'Unknown']
-    state_types = [s[0] for s in db.query(SubsequentRequest.state_type).distinct().all() if s[0] != 'Unknown']
-    protocols = [p[0] for p in db.query(SubsequentRequest.protocol).distinct().all() if p[0] != 'Unknown']
-    
-    return jsonify({
-        'resource_types': resource_types,
-        'state_types': state_types,
-        'protocols': protocols
-    })
+    try:
+        # Get distinct values for each filter category
+        resource_types = [r[0] for r in db.query(SubsequentRequest.resource_type).distinct().all() if r[0] != 'Unknown']
+        state_types = [s[0] for s in db.query(SubsequentRequest.state_type).distinct().all() if s[0] != 'Unknown']
+        protocols = [p[0] for p in db.query(SubsequentRequest.protocol).distinct().all() if p[0] != 'Unknown']
+        
+        return jsonify({
+            'resource_types': resource_types,
+            'state_types': state_types,
+            'protocols': protocols
+        })
+    finally:
+        db.close()
 
 @app.route('/', defaults={'path': ''})
 @app.route('/<path:path>')
