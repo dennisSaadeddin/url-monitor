@@ -14,9 +14,12 @@ class AlertManager:
     
     def __init__(self, db: Session):
         self.db = db
-        self.slack_webhook_url = os.getenv("SLACK_WEBHOOK_URL", "https://hooks.slack.com/services/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")
+        self.slack_webhook_url = os.getenv("SLACK_WEBHOOK_URL")
         self.failure_threshold = int(os.getenv("ALERT_FAILURE_THRESHOLD", "2"))
         self.cooldown_minutes = int(os.getenv("ALERT_COOLDOWN_MINUTES", "15"))
+        
+        if not self.slack_webhook_url:
+            print("WARNING: No Slack webhook URL configured. Alerts will be disabled.")
     
     def process_status_for_alerts(self, url_id: int, status: URLStatus):
         """Process a new status check result for potential alerts"""
