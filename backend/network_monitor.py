@@ -10,6 +10,7 @@ from urllib.parse import urlparse, urljoin
 from sqlalchemy.orm import Session
 from apscheduler.schedulers.background import BackgroundScheduler
 from models import URL, URLStatus, SubsequentRequest
+from alert_manager import AlertManager
 
 class NetworkMonitor:
     """Class for monitoring URLs and recording their statuses."""
@@ -18,6 +19,7 @@ class NetworkMonitor:
         self.scheduler = BackgroundScheduler()
         self.scheduler.start()
         self.jobs = {}
+        self.alert_manager = AlertManager(db)  # Initialize the alert manager
 
     def _url_exists_for_monitor(self, url_id, target_url):
         """Check if a subsequent request URL already exists for this monitored URL."""
@@ -76,6 +78,10 @@ class NetworkMonitor:
         
         self.db.add(status)
         self.db.commit()
+        
+        # Process the status for potential alerts
+        self.alert_manager.process_status_for_alerts(url_id, status)
+        
         return status
 
     def fallback_capture_method(self, url_id, url):

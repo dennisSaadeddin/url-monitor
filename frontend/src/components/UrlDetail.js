@@ -1,6 +1,7 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import axios from 'axios';
 import { Line } from 'react-chartjs-2';
+import AlertSettings from './AlertSettings';
 import {
   Chart as ChartJS,
   CategoryScale,
@@ -23,7 +24,8 @@ ChartJS.register(
   Legend
 );
 
-const UrlDetail = ({ url }) => {
+const UrlDetail = ({ url: initialUrl }) => {
+  const [url, setUrl] = useState(initialUrl);
   const [statuses, setStatuses] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
@@ -32,6 +34,11 @@ const UrlDetail = ({ url }) => {
   const [currentPage, setCurrentPage] = useState(1);
   const [totalPages, setTotalPages] = useState(1);
   const [allStatuses, setAllStatuses] = useState([]); // Store all statuses for pagination
+
+  // Handle URL updates from child components
+  const handleUrlUpdate = (updatedUrl) => {
+    setUrl(updatedUrl);
+  };
 
   // Update displayed statuses based on pagination - wrap in useCallback
   const updateDisplayedStatuses = useCallback((allData, page, size) => {
@@ -265,6 +272,13 @@ const UrlDetail = ({ url }) => {
 
   return (
     <div>
+      {/* Alert Settings */}
+      {!url.is_one_time && (
+        <div className="mb-6">
+          <AlertSettings url={url} onUpdate={handleUrlUpdate} />
+        </div>
+      )}
+      
       {/* Current Status */}
       <div className="mb-6 grid grid-cols-1 md:grid-cols-4 gap-4">
         <div className="bg-white overflow-hidden shadow rounded-lg">

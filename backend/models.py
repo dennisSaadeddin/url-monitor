@@ -15,6 +15,12 @@ class URL(Base):
     is_one_time = Column(Boolean, default=False)  # New field for one-time checks
     created_at = Column(DateTime, default=datetime.now)
     updated_at = Column(DateTime, default=datetime.now, onupdate=datetime.now)
+    
+    # Alert-related fields
+    alert_enabled = Column(Boolean, default=False)  # Whether alerts are enabled for this URL
+    consecutive_failures = Column(Integer, default=0)  # Count of consecutive failures
+    last_alerted_at = Column(DateTime, nullable=True)  # When the last alert was sent
+    alert_recovery = Column(Boolean, default=True)  # Whether to send recovery alerts
 
 class URLStatus(Base):
     """URLStatus model for storing URL monitoring results."""

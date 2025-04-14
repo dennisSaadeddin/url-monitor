@@ -83,6 +83,14 @@ def get_urls():
         except:
             url_dict['is_one_time'] = False  # Default value
         
+        # Try to include alert settings if they exist
+        try:
+            url_dict['alert_enabled'] = url.alert_enabled
+            url_dict['alert_recovery'] = url.alert_recovery
+        except:
+            url_dict['alert_enabled'] = False
+            url_dict['alert_recovery'] = True
+        
         url_list.append(url_dict)
     
     return jsonify(url_list)
@@ -352,6 +360,44 @@ def get_filter_options():
             'resource_types': resource_types,
             'state_types': state_types,
             'protocols': protocols
+        })
+    finally:
+        db.close()
+
+@app.route('/api/urls/<int:url_id>/alerts', methods=['PUT'])
+def update_url_alerts(url_id):
+    """Update alert settings for a URL"""
+    data = request.json
+    db = SessionLocal()
+    
+    try:
+        url = db.query(URL).filter(URL.id == url_id).first()
+        if not url:
+            return jsonify({'error': 'URL not found'}), 404
+        
+        # Update alert settings
+        if 'alert_enabled' in data:
+            url.alert_enabled = data['alert_enabled']
+        if 'alert_recovery' in data:
+            url.alert_recovery = data['alert_recovery']
+        
+        # Reset consecutive failures when disabling alerts
+        if 'alert_enabled' in data and not data['alert_enabled']:
+            url.consecutive_failures = 0
+        
+        db.commit()
+        db.refresh(url)
+        
+        return jsonify({
+            'id': url.id,
+            'url': url.url,
+            'name': url.name,
+            'is_active': url.is_active,
+            'check_frequency': url.check_frequency,
+            'created_at': url.created_at,
+            'updated_at': url.updated_at,
+            'alert_enabled': url.alert_enabled,
+            'alert_recovery': url.alert_recovery
         })
     finally:
         db.close()
