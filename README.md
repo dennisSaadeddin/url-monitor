@@ -2,6 +2,48 @@
 
 A web application for monitoring website availability and performance. The application allows you to add URLs to monitor, track their status, and view performance metrics over time.
 
+## Quick Start Guide for New Users
+
+If you've just cloned this repository and want to get started quickly:
+
+```bash
+# Clone the repository (if you haven't already)
+git clone https://github.com/yourusername/url-monitor.git
+cd url-monitor
+
+# 1. Set up the backend
+python -m venv venv
+source venv/bin/activate  # On Windows: venv\Scripts\activate
+cd backend
+pip install -r requirements.txt
+python reset_db.py  # When prompted, type 'y' to confirm
+
+# 2. Set up the frontend
+cd ../frontend
+npm install
+
+# 3. Run the application (Development Mode - Two terminals needed)
+# Terminal 1: Backend
+cd /path/to/url-monitor/backend
+source ../venv/bin/activate  # On Windows: ..\venv\Scripts\activate
+python app.py
+
+# Terminal 2: Frontend
+cd /path/to/url-monitor/frontend
+npm start
+
+# Access the app at http://localhost:3000
+```
+
+For production deployment, build the frontend and serve it through the Flask backend:
+```bash
+cd frontend
+npm run build
+cd ../backend
+python app.py
+# Access at http://localhost:5000
+```
+
 ## Features
 
 - Monitor multiple URLs with customizable check frequencies
