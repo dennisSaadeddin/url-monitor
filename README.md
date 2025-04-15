@@ -50,6 +50,14 @@ python app.py
 # Access at http://localhost:5000
 ```
 
+## Technologies Used
+
+- Backend: Flask, SQLAlchemy, APScheduler, Packet Capture (tcpdump/tshark)
+- Frontend: React, ChartJS, Tailwind CSS
+- Database: SQLite
+- Documentation: Swagger UI with OpenAPI 3.0
+- Notifications: Slack Webhooks
+
 ## Features
 
 - Monitor multiple URLs with customizable check frequencies
@@ -222,11 +230,3 @@ To set up Slack alerts:
 3. Add the webhook URL to your `.env` file as `SLACK_WEBHOOK_URL`
 4. Restart the backend server
 5. Enable alerts for specific URLs through the web interface
-
-## Technologies Used
-
-- Backend: Flask, SQLAlchemy, APScheduler, Packet Capture (tcpdump/tshark)
-- Frontend: React, ChartJS, Tailwind CSS
-- Database: SQLite
-- Documentation: Swagger UI with OpenAPI 3.0
-- Notifications: Slack Webhooks
