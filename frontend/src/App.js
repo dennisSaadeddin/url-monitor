@@ -17,7 +17,7 @@ function App() {
   const [oneTimeCheckResult, setOneTimeCheckResult] = useState(null); // One-time check results
   const [oneTimeActiveTab, setOneTimeActiveTab] = useState('status'); // Tab for one-time check results
   const [fetchingInProgress, setFetchingInProgress] = useState(false); // Prevent duplicate fetches
-  const [lastFetchTime, setLastFetchTime] = useState(0); // Timestamp of last fetch
+  const [lastFetchTime, setLastFetchTime] = useState(0); // Timestamp of last fetchfhyhhfhfhfh
 
   // Function to fetch all URLs with debouncing
   const fetchUrls = useCallback(async () => {
